@@ -10,7 +10,7 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "deploy:check": "tsx scripts/deploy-check.ts",
-    "test": "tsx tests/phase1-auth.test.ts && tsx tests/phase2-problems.test.ts && tsx tests/phase3-solutions.test.ts && tsx tests/phase6-security.test.ts"
+    "test": "tsx tests/phase1-auth.test.ts && tsx tests/phase2-problems.test.ts && tsx tests/phase3-solutions.test.ts && tsx tests/phase6-security.test.ts && tsx tests/phase7-chat.test.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",

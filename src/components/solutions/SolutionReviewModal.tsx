@@ -20,7 +20,9 @@ import {
   TrendingUp,
   FileText,
   RotateCw,
+  MessageSquare,
 } from "lucide-react";
+import { SecureSolutionChatModal } from "@/components/chat/SecureSolutionChatModal";
 
 interface SolutionReviewModalProps {
   isOpen: boolean;
@@ -48,6 +50,7 @@ export function SolutionReviewModal({
   const [error, setError] = useState<string | null>(null);
   const [shortlisting, setShortlisting] = useState(false);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -566,6 +569,18 @@ export function SolutionReviewModal({
               </button>
             )}
 
+            {/* Yechim ma'qullangach xavfsiz chat tugmasi */}
+            {["SHORTLISTED", "SELECTED", "PILOT", "COMPLETED"].includes(solution?.status) && (
+              <button
+                type="button"
+                onClick={() => setChatOpen(true)}
+                className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Xavfsiz Chat
+              </button>
+            )}
+
             <button
               type="button"
               onClick={onClose}
@@ -577,6 +592,14 @@ export function SolutionReviewModal({
         </div>
 
       </div>
+
+      {/* ICHKI XAVFSIZ CHAT MODAL */}
+      <SecureSolutionChatModal
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        solutionId={solution?.id}
+        solutionTitle={solution?.title}
+      />
     </div>
   );
 }

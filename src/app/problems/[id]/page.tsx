@@ -19,10 +19,12 @@ import {
   User,
   Shield,
   ChevronRight,
+  MessageSquare,
 } from "lucide-react";
 import { AIChallengeGeneratorWidget } from "@/components/ai/AIChallengeGeneratorWidget";
 import { AISolverMatchingWidget } from "@/components/ai/AISolverMatchingWidget";
 import { SolutionReviewModal } from "@/components/solutions/SolutionReviewModal";
+import { SecureSolutionChatModal } from "@/components/chat/SecureSolutionChatModal";
 
 interface SolutionItem {
   id: string;
@@ -109,6 +111,8 @@ export default function ProblemDetailPage({ params }: { params: { id: string } }
   const [selectedSolutionId, setSelectedSolutionId] = useState<string | null>(null);
   const [selectedSolutionData, setSelectedSolutionData] = useState<any>(null);
   const [modalDefaultTab, setModalDefaultTab] = useState<"ai" | "details">("details");
+  const [chatOpen, setChatOpen] = useState(false);
+  const [selectedChatSolution, setSelectedChatSolution] = useState<{ id: string; title: string } | null>(null);
 
   useEffect(() => {
     fetchProblemDetail();
@@ -365,7 +369,7 @@ export default function ProblemDetailPage({ params }: { params: { id: string } }
                         </div>
 
                         {/* Action Buttons for user inspection & AI assessment */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <button
                             type="button"
                             onClick={() => handleOpenReview(sol, "details")}
@@ -383,6 +387,20 @@ export default function ProblemDetailPage({ params }: { params: { id: string } }
                             <Sparkles className="w-3.5 h-3.5 text-sky-200" />
                             AI Tavsiyalari
                           </button>
+
+                          {["SHORTLISTED", "SELECTED", "PILOT", "COMPLETED"].includes(sol.status) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedChatSolution({ id: sol.id, title: sol.title });
+                                setChatOpen(true);
+                              }}
+                              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs transition"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" />
+                              Xavfsiz Chat
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -482,6 +500,18 @@ export default function ProblemDetailPage({ params }: { params: { id: string } }
         onStatusUpdated={() => {
           fetchProblemDetail();
         }}
+      />
+
+      {/* SECURE DIRECT CHAT MODAL */}
+      <SecureSolutionChatModal
+        isOpen={chatOpen}
+        onClose={() => {
+          setChatOpen(false);
+          setSelectedChatSolution(null);
+        }}
+        solutionId={selectedChatSolution?.id}
+        solutionTitle={selectedChatSolution?.title}
+        problemTitle={problem.title}
       />
     </div>
   );

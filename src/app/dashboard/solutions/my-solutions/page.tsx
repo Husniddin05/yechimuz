@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Send, Star, Clock, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
+import { Send, Star, Clock, CheckCircle2, AlertCircle, ArrowLeft, MessageSquare } from "lucide-react";
+import { SecureSolutionChatModal } from "@/components/chat/SecureSolutionChatModal";
 
 interface MySolution {
   id: string;
@@ -29,6 +30,8 @@ interface MySolution {
 export default function MySolutionsPage() {
   const [solutions, setSolutions] = useState<MySolution[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [selectedChatSolution, setSelectedChatSolution] = useState<{ id: string; title: string } | null>(null);
 
   useEffect(() => {
     fetchMySolutions();
@@ -117,11 +120,36 @@ export default function MySolutionsPage() {
                   <p className="text-sm font-black text-slate-900">{formatCurrency(sol.estimatedCost)} UZS</p>
                   <p className="text-[10px] text-slate-400">{sol.estimatedDays} kun</p>
                 </div>
+
+                {["SHORTLISTED", "SELECTED", "PILOT", "COMPLETED"].includes(sol.status) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedChatSolution({ id: sol.id, title: sol.title });
+                      setChatOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-xs transition"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    Xavfsiz Chat
+                  </button>
+                )}
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {/* SECURE DIRECT CHAT MODAL */}
+      <SecureSolutionChatModal
+        isOpen={chatOpen}
+        onClose={() => {
+          setChatOpen(false);
+          setSelectedChatSolution(null);
+        }}
+        solutionId={selectedChatSolution?.id}
+        solutionTitle={selectedChatSolution?.title}
+      />
     </div>
   );
 }

@@ -26,6 +26,9 @@ model User {
   shortlists       Shortlist[]  @relation("SelectedShortlists")
   notifications    Notification[]
   auditLogs        AuditLog[]
+  ownerChatRooms   ChatRoom[]   @relation("OwnerChatRooms")
+  solverChatRooms  ChatRoom[]   @relation("SolverChatRooms")
+  chatMessages     ChatMessage[]
 }
 
 model Role {
@@ -103,6 +106,7 @@ model Problem {
   owner    User            @relation("OwnerProblems", fields: [ownerId], references: [id])
   category ProblemCategory @relation(fields: [categoryId], references: [id])
   challenge Challenge?
+  chatRooms ChatRoom[]
 }
 
 model Challenge {
@@ -149,6 +153,7 @@ model Solution {
   reviews   ExpertReview[]
   shortlists Shortlist[]
   pilots    Pilot[]
+  chatRoom  ChatRoom?
 }
 
 model SolutionAttachment {
@@ -257,3 +262,33 @@ model AuditLog {
 
   user User? @relation(fields: [userId], references: [id])
 }
+
+model ChatRoom {
+  id         String        @id @default(uuid())
+  solutionId String        @unique
+  problemId  String
+  ownerId    String
+  solverId   String
+  status     String        @default("ACTIVE") // ACTIVE, CLOSED
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  solution   Solution      @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  problem    Problem       @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  owner      User          @relation("OwnerChatRooms", fields: [ownerId], references: [id], onDelete: Cascade)
+  solver     User          @relation("SolverChatRooms", fields: [solverId], references: [id], onDelete: Cascade)
+  messages   ChatMessage[]
+}
+
+model ChatMessage {
+  id         String   @id @default(uuid())
+  chatRoomId String
+  senderId   String
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  sender     User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
+

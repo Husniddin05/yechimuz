@@ -241,6 +241,17 @@ export class SolutionService {
       throw new Error("Sizda ushbu yechimni shortlist qilish vakolati mavjud emas.");
     }
 
+    const solution = await prisma.solution.findUnique({
+      where: { id: input.solutionId },
+      include: {
+        solver: { include: { profile: true } },
+      },
+    });
+
+    if (!solution) {
+      throw new Error("Yechim topilmadi.");
+    }
+
     const shortlist = await prisma.shortlist.create({
       data: {
         challengeId: input.challengeId,
@@ -254,6 +265,50 @@ export class SolutionService {
     await prisma.solution.update({
       where: { id: input.solutionId },
       data: { status: "SHORTLISTED" },
+    });
+
+    // Avtomatik xavfsiz chat xonasini ochish (Problem Owner va Solver o'rtasida)
+    const existingChat = await prisma.chatRoom.findUnique({
+      where: { solutionId: input.solutionId },
+    });
+
+    if (!existingChat) {
+      await prisma.chatRoom.create({
+        data: {
+          solutionId: input.solutionId,
+          problemId: challenge.problemId,
+          ownerId: challenge.problem.ownerId,
+          solverId: solution.solverId,
+          status: "ACTIVE",
+        },
+      });
+    } else if (existingChat.status !== "ACTIVE") {
+      await prisma.chatRoom.update({
+        where: { id: existingChat.id },
+        data: { status: "ACTIVE" },
+      });
+    }
+
+    // Solverga bildirishnoma: Yechim ma'qullandi va xavfsiz chat ochildi
+    await prisma.notification.create({
+      data: {
+        userId: solution.solverId,
+        title: "Yechimingiz Ma'qullandi!",
+        message: `"${solution.title}" yechimingiz muammo egasi tomonidan ma'qullandi (shortlist qilindi). Endi siz muammo egasi bilan to'g'ridan-to'g'ri xavfsiz chatda muloqot qilishingiz mumkin.`,
+        type: "SOLUTION_SHORTLISTED",
+        linkUrl: `/problems/${challenge.problemId}`,
+      },
+    });
+
+    // Muammo egasiga bildirishnoma
+    await prisma.notification.create({
+      data: {
+        userId: challenge.problem.ownerId,
+        title: "Xavfsiz Chat Ochildi",
+        message: `"${solution.title}" yechimi muvaffaqiyatli shortlistga kiritildi. Yechimchi bilan to'g'ridan-to'g'ri xavfsiz chat ochildi.`,
+        type: "CHAT_OPENED",
+        linkUrl: `/problems/${challenge.problemId}`,
+      },
     });
 
     return shortlist;
